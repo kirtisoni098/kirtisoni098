@@ -1,0 +1,199 @@
+import numpy as np 
+import pandas as pd 
+from matplotlib import pyplot as plt
+import seaborn as sns
+
+
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+
+
+%matplotlib inline
+
+data=pd.read_csv("TravelInsurancePrediction.csv")
+data
+
+data.columns
+
+data.isna().sum()
+
+data.dtypes
+
+data.head()
+
+data['GraduateOrNot'].value_counts()
+
+plt.figure(figsize=(10,8))
+sns.heatmap(data.corr(),cbar=True,annot=True,cmap='Blues')
+
+fig, ax = plt.subplots(figsize=(8,8))
+sns.countplot(hue='Age',x='TravelInsurance',data=data)
+plt.show()
+
+fig, ax = plt.subplots(figsize=(8,8))
+(data.groupby('Age').sum()['TravelInsurance']/data.groupby('Age').count()['TravelInsurance']).plot(kind='bar') 
+
+
+
+
+plt.title('% of Insurance purchased breakdown by age')
+plt.ylabel('Percentage')
+plt.show()
+
+
+plt.figure(figsize=(10, 6))
+sns.set(style = 'whitegrid')
+
+sns.distplot(data['Age'])
+plt.title('Distribution of Age', fontsize = 20)
+plt.xlabel('Range of Age')
+plt.ylabel('Count')
+data.hist(figsize=(12,8),bins=20)
+plt.show()
+
+data['AnnualIncome'].hist(color='green',bins=50,figsize=(8,4))
+data['GraduateOrNot'].value_counts().plot(kind='bar')
+plt.style.use('fivethirtyeight')
+plt.show()
+
+plt.title('Age Group of Graduated people')
+plt.style.use('fivethirtyeight')
+data['Age'][data['GraduateOrNot'] == 'Yi'].plot(kind='hist', rwidth=0.95)
+plt.show()
+
+plt.title('Age Group of Not Graduated people')
+plt.style.use('fivethirtyeight')
+data['Age'][data['GraduateOrNot'] == 'No'].plot(kind='hist', rwidth=0.95)
+plt.show()
+
+data['Employment Type'].unique()
+plt.style.use('fivethirtyeight')
+data['Employment Type'].value_counts().plot(kind='bar')
+plt.show()
+
+data['AnnualIncome'].plot(kind='hist', rwidth=0.95)
+plt.show()
+
+emp_type = ['Government Sector', 'Private Sector/Self Employed']
+
+for typ in emp_type:
+    plt.title(f'Annual Income of {typ}')
+    data['AnnualIncome'][data['Employment Type'] == typ].plot(kind='hist', rwidth=0.95)
+    plt.show()
+    print('\n')
+
+
+data['FamilyMembers'].plot(kind='hist', rwidth=0.95)
+plt.show()
+
+data['FrequentFlyer'].unique()
+data['FrequentFlyer'].value_counts().plot(kind='bar')
+plt.show()
+
+data['EverTravelledAbroad'].unique()
+data['EverTravelledAbroad'].value_counts().plot(kind='bar')
+plt.show()
+
+data['EverTravelledAbroad'][data['FrequentFlyer'] == 'Yi'].value_counts().plot(kind='bar')
+plt.show()
+
+data['EverTravelledAbroad'][data['FrequentFlyer'] == 'No'].value_counts().plot(kind='bar')
+plt.show()
+
+data['TravelInsurance'].unique()
+data['TravelInsurance'].value_counts().plot(kind='bar')
+plt.show()
+
+data['TravelInsurance'][data['EverTravelledAbroad'] == 'Yi'].value_counts().plot(kind='bar')
+plt.show()
+
+plt.show()
+
+data['TravelInsurance'][data['EverTravelledAbroad'] == 'No'].value_counts().plot(kind='bar')
+plt.show()
+
+data['ChronicDiseases'].unique()
+data['ChronicDiseases'].value_counts().plot(kind='bar')
+plt.show()
+
+
+
+data['ChronicDiseases'][data['FrequentFlyer'] == 'Yi'].value_counts().plot(kind='bar')
+plt.show()
+
+data['ChronicDiseases'][data['FrequentFlyer'] == 'No'].value_counts().plot(kind='bar')
+plt.show()
+
+plt.figure(figsize=(30, 10))
+data.Age.value_counts(normalize=True)
+data.Age.value_counts(normalize=True).plot.pie()
+plt.show()
+sns.displot(data['Employment Type'])
+plt.show()
+
+data.dtypes[data.dtypes == 'object']
+data['Employment Type'].unique()
+
+data['GraduateOrNot'].unique()
+
+data['GraduateOrNot'].replace(['Yi', 'No'], [1, 0], inplace=True)
+data['FrequentFlyer'].unique()
+
+data['FrequentFlyer'].replace(['Yi', 'No'], [1, 0], inplace=True)
+data['EverTravelledAbroad'].unique()
+
+data['EverTravelledAbroad'].replace(['Yi', 'No'], [1, 0], inplace=True)
+cols_to_scale = ['Age', 'AnnualIncome', 'FamilyMembers']
+scale = MinMaxScaler()
+scale.fit(data[cols_to_scale])
+
+scaled = scale.fit_transform(data[cols_to_scale])
+
+for i in range(3):
+    data[cols_to_scale[i]] = scaled[:,i]
+data.head()
+
+x, y = data.drop('TravelInsurance',axis=1),data['TravelInsurance']
+
+x.head()
+
+y.head()
+
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=1)
+x_train.shape, x_test.shape
+
+y_train.value_counts()
+
+y_test.value_counts()
+
+model = LogisticRegression()
+model.fit(x_train, y_train)
+
+y_pred_test = model.predict(x_test)
+y_pred_train = model.predict(x_train)
+
+y_pred_test[y_pred_test >= 0.5] = 1
+y_pred_test[y_pred_test < 0.5] = 0
+
+y_pred_train[y_pred_train >= 0.5] = 1
+y_pred_train[y_pred_train < 0.5] = 0	
+
+    plt.title('Test Data')
+
+sns.heatmap(confusion_matrix(y_test,y_pred_test), annot=True, fmt='g')
+plt.show()
+
+print('\n')
+plt.title('Train Data')
+sns.heatmap(confusion_matrix(y_train,y_pred_train), annot=True, fmt='g', )
+plt.show()
+
+
+print(classification_report(y_test, y_pred_test))
+print(classification_report(y_train, y_pred_train))
+
+
